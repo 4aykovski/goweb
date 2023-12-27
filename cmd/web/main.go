@@ -8,6 +8,11 @@ import (
 	"path/filepath"
 )
 
+type application struct {
+	infoLog  *log.Logger
+	errorLog *log.Logger
+}
+
 func main() {
 	// настройка конфига через консоль
 	addr := flag.String("addr", ":8080", "Сетевой адрес HTTP")
@@ -17,11 +22,16 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Llongfile)
 
+	app := &application{
+		infoLog:  infoLog,
+		errorLog: errLog,
+	}
+
 	// создание мультиплексора и регистрация обработчиков
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/snippet", showSnippet)
-	mux.HandleFunc("/snippet/create", createSnippet)
+	mux.HandleFunc("/", app.home)
+	mux.HandleFunc("/snippet", app.showSnippet)
+	mux.HandleFunc("/snippet/create", app.createSnippet)
 
 	// регистрация обработчика файловой системы
 	fileServer := http.FileServer(&neuteredFileSystem{http.Dir("./ui/static")})
